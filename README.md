@@ -1,6 +1,6 @@
 # cleanSwiftCoreData1
 
-CleanSwift architecture (https://clean-swift.com)  and CoreData.
+Video illustration added and some screenshots.  CleanSwift architecture (https://clean-swift.com)  and CoreData.
 For demonstration only the architecture.
 Images, loaded in last, from cache taken if bad internet.
 Storyboard is is not used, presense it only for no crash as mock.
