@@ -27,8 +27,8 @@ class UserDataStoreWorker: UserDataStoreWorkerProtocol {
         )
         
         return userEntities.compactMap { entity in
-            guard 
-                let id = entity.value(forKey: "id") as? Int,
+            guard
+                let id = (entity.value(forKey: "id") as? NSNumber)?.intValue,
                 let name = entity.value(forKey: "name") as? String,
                 let species = entity.value(forKey: "species") as? String,
                 let image = entity.value(forKey: "image") as? String,
@@ -65,63 +65,41 @@ class UserDataStoreWorker: UserDataStoreWorkerProtocol {
     }
 
     func treatmentUsers(_ usersCur: [CharResult]) {
-        //increase name up to photosArray.count
-        let requestIncrease = NSFetchRequest<NSFetchRequestResult>(entityName: "Character")
-        let titleSort = NSSortDescriptor(key: "id", ascending: true)
-        requestIncrease.sortDescriptors = [titleSort]
-        //        let managedObjectContext =
-        //            CoredataStack.mainContext
-
-        var curI = 0
+        let managedObjectContext = CoreDataStack.shared.viewContext
         for el in usersCur {
-            print("el = \(el)")
-            print("el[\"id\"]  = \(String(describing: el.id))  ")
-            let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Character")
-            request.predicate = NSPredicate(format: "(id == %@)",
-                                            argumentArray: [el.id as Any])
+            let request = NSFetchRequest<NSManagedObject>(entityName: "Character")
+            request.predicate = NSPredicate(format: "id == %lld", Int64(el.id))
             do {
-                let managedObjectContext = CoreDataStack.shared.persistentContainer.viewContext //CoredataStack.shared.persistentContainer.viewContext
-                if let fetchedObjects = try managedObjectContext.fetch(request) as? [Character] {
-                    if fetchedObjects.count == 0 {
-                        //save new in local database
-                        
-                        let curUser = NSEntityDescription.insertNewObject(forEntityName: "Character", into: managedObjectContext) as? Character
-                        curUser?.id =  Int64(Int(el.id))
-                        curUser?.created = el.created
-                        curUser?.name = el.name
-                        curUser?.image = el.image
-                        curUser?.species = el.species
-
-                        managedObjectContext.performAndWait { () -> Void in
-                            if managedObjectContext.hasChanges {
-                                do {
-                                    try managedObjectContext.save()
-                                } catch let error {
-                                    print(error)
-                                }
-                            }
-                        }
-                        curI = curI + 1
-                    }
+                let count = try managedObjectContext.count(for: request)
+                if count == 0 {
+                    let curUser = NSEntityDescription.insertNewObject(forEntityName: "Character", into: managedObjectContext)
+                    curUser.setValue(Int64(el.id), forKey: "id")
+                    curUser.setValue(el.created, forKey: "created")
+                    curUser.setValue(el.name, forKey: "name")
+                    curUser.setValue(el.image, forKey: "image")
+                    curUser.setValue(el.species, forKey: "species")
                 }
             } catch {
-                fatalError("Failed to fetch UserCur: \(error)")
-                //return nil
+                print("Failed to fetch Character: \(error)")
+            }
+        }
+
+        if managedObjectContext.hasChanges {
+            do {
+                try managedObjectContext.save()
+            } catch {
+                print(error)
             }
         }
     }
 
     func deleteAllUsers() {
-        let userEntities: [NSManagedObject] = coreDataWorker.fetchEntities(
-            entityName: "Character",
-            predicate: nil,
-            sortDescriptors: nil
-        )
-        
-        coreDataWorker.performBackgroundTask { context in
-            for entity in userEntities {
-                context.delete(entity)
-            }
+        let context = CoreDataStack.shared.viewContext
+        context.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "Character")
+            let entities = (try? context.fetch(request)) ?? []
+            entities.forEach { context.delete($0) }
+            CoreDataStack.shared.saveContext(context)
         }
     }
 }

@@ -3,6 +3,7 @@ import UIKit
 protocol MainPresentationLogic {
     func presentFetchedCartoonCharacters(response: Main.displayCartoonCharacters.Response)
     func presentFetchedCartoonCharactersFromDB(responseFromDB: [Main.displayCartoonCharacters.ViewModel.characterInformationModel])
+    func presentFetchFailed()
 }
 
 class MainPresenter: MainPresentationLogic {
@@ -50,5 +51,9 @@ class MainPresenter: MainPresentationLogic {
         let viewModel = Main.displayCartoonCharacters.ViewModel(characterInformation: characterInformation)
 
         viewController?.addCharactersToVariable(viewModel: viewModel)
+    }
+
+    func presentFetchFailed() {
+        viewController?.displayFetchFailed()
     }
 }

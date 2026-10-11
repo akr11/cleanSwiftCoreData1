@@ -32,14 +32,8 @@ class MainInteractor: MainBusinessLogic, MainDataStore {
 
         let cachedUsers = dataStoreWorker.fetchUsers()
 
-        // If we have cached data and don't need to refresh, use it
         if !cachedUsers.isEmpty && !request.forceRefresh {
-            presenter?.presentFetchedCartoonCharactersFromDB(responseFromDB: cachedUsers)
-            self.characters.removeAll()
-            for el in cachedUsers {
-                let el1 = CharResult(id: el.id, name: el.name, status: Status.unknown, species: el.species, type: "", gender: Gender.unknown, origin: Location(name: "", url: ""), location: Location(name: "", url: ""), image: el.image, episode: [""], url: "", created: el.created)
-                self.characters.append(el1)
-            }
+            showCachedUsers(cachedUsers)
             return
         }
 
@@ -48,32 +42,40 @@ class MainInteractor: MainBusinessLogic, MainDataStore {
                 switch result {
                 case .success(let result):
                     let characters = result.results
-                    self?.characters.removeAll()
                     self?.characters = characters
                     let response = Main.displayCartoonCharacters.Response(characters: characters)
-
-                    // Save to Core Data in background
-//                    self?.dataStoreWorker.saveUsers(characters)
                     self?.dataStoreWorker.treatmentUsers(characters)
-
                     self?.presenter?.presentFetchedCartoonCharacters(response: response)
                 case .failure(let failure):
                     print(failure)
-//                    if !cachedUsers.isEmpty {
-//                        self.presenter?.presentUsers(response: UserListScene.FetchUsers.Response(
-//                            users: cachedUsers,
-//                            error: nil
-//                        ))
-//                    } else {
-//                        // Otherwise, present the error
-//                        self.presenter?.presentUsers(response: UserListScene.FetchUsers.Response(
-//                            users: nil,
-//                            error: error
-//                        ))
-//                    }
+                    if !cachedUsers.isEmpty {
+                        self?.showCachedUsers(cachedUsers)
+                    } else {
+                        self?.presenter?.presentFetchFailed()
+                    }
                 }
             }
         }
+    }
+
+    private func showCachedUsers(_ cachedUsers: [Main.displayCartoonCharacters.ViewModel.characterInformationModel]) {
+        characters = cachedUsers.map { el in
+            CharResult(
+                id: el.id,
+                name: el.name,
+                status: .unknown,
+                species: el.species,
+                type: "",
+                gender: .unknown,
+                origin: Location(name: "", url: ""),
+                location: Location(name: "", url: ""),
+                image: el.image,
+                episode: [""],
+                url: "",
+                created: el.created
+            )
+        }
+        presenter?.presentFetchedCartoonCharactersFromDB(responseFromDB: cachedUsers)
     }
     
     func saveSelectedItem(character: Main.displayCartoonCharacters.ViewModel.characterInformationModel) {

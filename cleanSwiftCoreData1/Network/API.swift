@@ -12,7 +12,7 @@ struct CartoonСharacters: Codable {
 // MARK: - Info
 struct Info: Codable {
     let count, pages: Int
-    let next, prev: String
+    let next, prev: String?
 }
 
 // MARK: - Result
@@ -32,7 +32,18 @@ struct CharResult: Codable {
 enum Gender: String, Codable {
     case female = "Female"
     case male = "Male"
+    case genderless = "Genderless"
     case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = Gender(rawValue: raw) ?? .unknown
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
 }
 
 // MARK: - Location
@@ -45,4 +56,14 @@ enum Status: String, Codable {
     case alive = "Alive"
     case dead = "Dead"
     case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = Status(rawValue: raw) ?? .unknown
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
 }

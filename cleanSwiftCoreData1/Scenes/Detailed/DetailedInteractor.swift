@@ -11,61 +11,41 @@ protocol DetailedDataStore {
 
 class DetailedInteractor: DetailedBusinessLogic, DetailedDataStore {
     var character: CharResult?
-    let network = Network()
     var presenter: DetailedPresentationLogic?
     var worker: DetailedWorker?
     
     // MARK: Do something
     
     func fetchDetailedInformation() {
-        var cashedImage = UIImage()
-//        var url1 = URL(string: "https://github.com/")
-        if let imageString = character?.image,
-           let url = URL(string: imageString) {
-//            url1 = url
-            KingfisherManager.shared.retrieveImage(with: url) { result in
-                if case .success(let value) = result {
-                    DispatchQueue.main.async {
-                        cashedImage = value.image
-                    }
-                } else {
-                    print("no image")
-                }
-            }
-        } else {
+        guard let character else { return }
+        let imageUrl = character.image
+
+        guard let url = URL(string: imageUrl) else {
+            presentDetails(for: character, image: nil, imageUrl: imageUrl)
             return
         }
 
-        DispatchQueue.main.async {
-                let response = Detailed.displayDetailedInformation.Response(
-                    name: self.character?.name ?? "",
-                    species: self.character?.species ?? "",
-                    image: cashedImage,
-                    imageUrl: self.character?.image ?? "")
-            self.presenter?.presentDetailedInformation(response: response)
+        KingfisherManager.shared.retrieveImage(with: url) { [weak self] result in
+            let image: UIImage?
+            if case .success(let value) = result {
+                image = value.image
+            } else {
+                image = nil
+            }
+            DispatchQueue.main.async {
+                self?.presentDetails(for: character, image: image, imageUrl: imageUrl)
+            }
         }
+    }
 
-//        network.loadImage(for: url1!) { [weak self] result in
-//            DispatchQueue.main.async {
-//                switch result {
-//                case .success(let fetchedImage):
-//                    let response = Detailed.displayDetailedInformation.Response(
-//                        name: self?.character?.name ?? "",
-//                        species: self?.character?.species ?? "",
-//                        image: fetchedImage ?? cashedImage,
-//                        imageUrl: self?.character?.image ?? "")
-//                    self?.presenter?.presentDetailedInformation(response: response)
-//                case .failure(_):
-//                    let response = Detailed.displayDetailedInformation.Response(
-//                        name: self?.character?.name ?? "",
-//                        species: self?.character?.species ?? "",
-//                        image: cashedImage,
-//                        imageUrl: self?.character?.image ?? "")
-//                    self?.presenter?.presentDetailedInformation(response: response)
-//                    break
-//                }
-//            }
-//        }
+    private func presentDetails(for character: CharResult, image: UIImage?, imageUrl: String) {
+        let response = Detailed.displayDetailedInformation.Response(
+            name: character.name,
+            species: character.species,
+            image: image,
+            imageUrl: imageUrl
+        )
+        presenter?.presentDetailedInformation(response: response)
     }
 }
 

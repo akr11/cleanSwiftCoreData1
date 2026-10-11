@@ -27,7 +27,12 @@ class DetailedViewController: UIViewController, DetailedDisplayLogic {
     }()
     
     // Картинка героя
-    private lazy var characterImage = UIImageView()
+    private lazy var characterImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        return imageView
+    }()
     
     // Все три сущности помещаем в стек один под одним
     private lazy var stack: UIStackView = {
@@ -79,11 +84,14 @@ class DetailedViewController: UIViewController, DetailedDisplayLogic {
     }
     
     private func setupConstraints() {
+        let safeArea = view.safeAreaLayoutGuide
         stack.translatesAutoresizingMaskIntoConstraints = false
+        characterImage.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 50),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -50)
+            stack.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 20),
+            stack.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor, constant: -20),
+            characterImage.heightAnchor.constraint(equalToConstant: 280)
         ])
     }
     
@@ -97,23 +105,10 @@ class DetailedViewController: UIViewController, DetailedDisplayLogic {
         characterImage.kf.indicatorType = .activity
         characterName.text = viewModel.name
         characterSpecies.text = viewModel.species
-        if let image = viewModel.image as? UIImage {
+        if let image = viewModel.image {
             characterImage.image = image
-        } else {
-            guard let url = URL.init(string: viewModel.imageUrl) else {
-                return
-            }
-            KingfisherManager.shared.retrieveImage(with: url) { result in
-                if case .success(let value) = result {
-                    DispatchQueue.main.async {
-                        let cashedImage = value.image
-                        self.characterImage.image = cashedImage
-                    }
-                } else {
-                    print("no image")
-                }
-            }
-
+        } else if let url = URL(string: viewModel.imageUrl) {
+            characterImage.kf.setImage(with: url)
         }
     }
 

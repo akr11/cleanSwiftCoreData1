@@ -51,8 +51,8 @@ class CoreDataWorker: CoreDataWorkerProtocol {
     }
 
     func deleteEntity<T: NSManagedObject>(_ entity: T, in context: NSManagedObjectContext? = nil) -> Bool {
-        let context = context ?? coreDataStack.viewContext
-//        managedObjectContext.delete(entity)
+        let context = entity.managedObjectContext ?? context ?? coreDataStack.viewContext
+        context.delete(entity)
 
         do {
             try context.save()

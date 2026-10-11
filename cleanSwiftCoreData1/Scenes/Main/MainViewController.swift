@@ -1,12 +1,12 @@
 import UIKit
-import CoreData
 import Kingfisher
 
 protocol MainDisplayLogic: AnyObject {
     func addCharactersToVariable(viewModel: Main.displayCartoonCharacters.ViewModel)
+    func displayFetchFailed()
 }
 
-class MainViewController: UIViewController, MainDisplayLogic, NSFetchedResultsControllerDelegate {
+class MainViewController: UIViewController, MainDisplayLogic {
 
     // MARK: VIP variables
     
@@ -14,8 +14,6 @@ class MainViewController: UIViewController, MainDisplayLogic, NSFetchedResultsCo
     var router: (NSObjectProtocol & MainRoutingLogic & MainDataPassing)?
     
     // MARK: Class variables
-
-    var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>!
 
     private lazy var mainTable = UITableView()
     private lazy var refreshControl: UIRefreshControl = {
@@ -113,94 +111,8 @@ class MainViewController: UIViewController, MainDisplayLogic, NSFetchedResultsCo
         refreshControl.endRefreshing()
     }
 
-    //MARK: - fetched controller
-
-    func initializeFetchedResultsController() {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Character")
-        let created_atSort = NSSortDescriptor(key: "created", ascending: true)
-        request.sortDescriptors = [created_atSort]
-        let managedObjectContext =
-        CoreDataStack.shared.viewContext //.shared.viewContext
-
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: request, managedObjectContext: managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
-        fetchedResultsController.delegate = self
-
-
-        do {
-            try fetchedResultsController.performFetch()
-            mainTable.reloadData()
-        } catch {
-            fatalError("Failed to initialize FetchedResultsController: \(error)")
-        }
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
-        print("photo didChange sectionInfo type = \(type)")
-        self.mainTable.reloadData()
-        switch type {
-        case .insert:
-            self.mainTable.performBatchUpdates({
-                mainTable.insertSections(IndexSet(integer: sectionIndex), with: .automatic)
-                mainTable.reloadData()
-            }, completion: nil)
-
-        case .delete:
-            self.mainTable.performBatchUpdates({
-                mainTable.deleteSections(IndexSet(integer: sectionIndex), with: .automatic)
-                mainTable.reloadData()
-            }, completion: nil)
-
-        case .move:
-            if self.mainTable.numberOfSections > 0 {
-                self.mainTable.reloadSections(IndexSet(integer: 0), with: .automatic)
-            }
-            break
-        case .update:
-            break
-        @unknown default:
-                break
-        }
-    }
-
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-
-        DispatchQueue.main.async {
-            self.mainTable.reloadData()
-        }
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        print("post create edit didChange indexPath type = \(type.rawValue)")
-        switch type {
-        case .insert:
-            DispatchQueue.main.async {
-                self.mainTable.reloadData()
-            }
-            break
-
-        case .delete:
-            DispatchQueue.main.async {
-                self.mainTable.reloadData()
-            }
-        case .move:
-            self.mainTable.reloadData()
-            break
-        case .update:
-            DispatchQueue.main.async {
-                self.mainTable.reloadData()
-            }
-            break
-        @unknown default:
-            break
-        }
-    }
-
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-
-        print("controllerDidChangeContent  fetchedResultsController.fetchedObjects?.count =  \(String(describing: fetchedResultsController.fetchedObjects?.count))")
-        DispatchQueue.main.async {
-            self.mainTable.reloadData()
-        }
+    func displayFetchFailed() {
+        refreshControl.endRefreshing()
     }
 
 }
@@ -226,8 +138,7 @@ extension MainViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CharacterInformation") as? MainTableViewCell
         cell?.curImageView.kf.indicatorType = .activity
         let user = characters[indexPath.row]
-        let urlString =  String(format: user.image) //characters[indexPath.row].image)
-        if let url = URL(string:urlString) {
+        if let url = URL(string: user.image) {
             cell?.curImageView.kf.setImage(with: url)
         }
         cell?.setupLabels(name: user.name /*characters[indexPath.row].name*/, species: characters[indexPath.row].species)

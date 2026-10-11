@@ -7,13 +7,13 @@ enum Detailed {
         struct Response {
             let name: String
             let species: String
-            let image: UIImage
+            let image: UIImage?
             let imageUrl: String
         }
         struct ViewModel {
             let name: String
             let species: String
-            let image: UIImage
+            let image: UIImage?
             let imageUrl: String
         }
     }

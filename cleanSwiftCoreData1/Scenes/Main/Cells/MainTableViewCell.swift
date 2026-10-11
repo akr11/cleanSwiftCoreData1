@@ -52,27 +52,23 @@ class MainTableViewCell: UITableViewCell {
     
     private func setupConstraints() {
         curImageView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            curImageView.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 20),
-            curImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
-            curImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            curImageView.widthAnchor.constraint(equalToConstant: 50),
-            curImageView.heightAnchor.constraint(equalToConstant: 50)
-        ])
-
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            nameLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0),
-            nameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            nameLabel.leadingAnchor.constraint(equalTo: curImageView.trailingAnchor, constant: 20),
-        ])
-        
         speciesLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+            curImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            curImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
+            curImageView.widthAnchor.constraint(equalToConstant: 50),
+            curImageView.heightAnchor.constraint(equalToConstant: 50),
+            contentView.bottomAnchor.constraint(greaterThanOrEqualTo: curImageView.bottomAnchor, constant: 10),
+
+            nameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            nameLabel.leadingAnchor.constraint(equalTo: curImageView.trailingAnchor, constant: 20),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+
             speciesLabel.leadingAnchor.constraint(equalTo: curImageView.trailingAnchor, constant: 20),
-            speciesLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0),
+            speciesLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
             speciesLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
-            speciesLabel.bottomAnchor.constraint(greaterThanOrEqualTo: contentView.bottomAnchor, constant: 10)
+            contentView.bottomAnchor.constraint(greaterThanOrEqualTo: speciesLabel.bottomAnchor, constant: 10)
         ])
     }
     

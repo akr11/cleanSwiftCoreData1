@@ -11,7 +11,11 @@ struct Network {
     private let url = URL(string: "https://rickandmortyapi.com/api/character?page=3")
 
     func fatchCharacters(completion:  @escaping Completion) {
-        let urlRequest = URLRequest(url: url ?? URL(fileURLWithPath: ""))
+        guard let url else {
+            completion(.failure(URLError(.badURL)))
+            return
+        }
+        let urlRequest = URLRequest(url: url)
         let task = URLSession.shared.dataTask(
             with: urlRequest,
             completionHandler: { (data, response, error) in
@@ -36,11 +40,10 @@ struct Network {
                 }
 
                 do {
-                    let characters = try? JSONDecoder().decode(CartoonСharacters.self, from: data)
-                    guard let result = characters else {
-                        return
-                    }
-                    completion(.success(result))
+                    let characters = try JSONDecoder().decode(CartoonСharacters.self, from: data)
+                    completion(.success(characters))
+                } catch {
+                    completion(.failure(error))
                 }
             }
         )
